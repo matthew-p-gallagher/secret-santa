@@ -1,2 +1,2 @@
 # secret-santa
-Simple secret Santa organiser
+Simple Secret Santa organiser
