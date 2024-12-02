@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="participant-container">
+    <h1 class="animated">Secret Santa</h1>
+
+    <div class="code-entry-box">
+        <h2>Enter Your Code</h2>
+        <form method="POST" action="{{ url_for('view_match') }}" class="code-form" id="codeForm">
+            <div class="input-group">
+                <input type="text" name="access_code" placeholder="Enter 4-digit code" pattern="[0-9]{4}" maxlength="4"
+                    required>
+            </div>
+            <button type="submit" id="submitButton">View My Match</button>
+        </form>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="error-message">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="info-text">
+        <p>Enter the 4-digit code that was provided to you to see who you're buying a gift for.</p>
+    </div>
+</div>
+
+<script>
+    document.getElementById('codeForm').addEventListener('submit', function (e) {
+        const submitButton = document.getElementById('submitButton');
+
+        if (submitButton.disabled) {
+            e.preventDefault();
+            return;
+        }
+
+        submitButton.disabled = true;
+        setTimeout(() => {
+            submitButton.disabled = false;
+        }, 3000); // 3 second cooldown
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="participant-container">
+    <div class="result-box">
+        <h2>Your Secret Santa Match</h2>
+
+        <div class="match-info">
+            <p class="greeting">Hello {{ participant.name }}!</p>
+
+            <div class="match-reveal">
+                <p>You are Secret Santa for:</p>
+                <h2 class="assigned-name">{{ assigned_to.name }}</h2>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <p>Remember to keep this a secret! 🎅</p>
+            <p>Gift limit is <strong>£30</strong></p>
+            <p>You can check your match again later with the same code.</p>
+        </div>
+
+        <div class="actions">
+            <a href="{{ url_for('home') }}" class="button">Back to Code Entry</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

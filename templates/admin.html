@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="text-align: right; margin-bottom: 20px;">
+    <a href="{{ url_for('logout') }}" class="button">Logout</a>
+</div>
+<h1>Secret Santa Admin</h1>
+
+<section class="participants">
+    <h2>Add Participant</h2>
+    <form method="POST" action="{{ url_for('add_participant') }}">
+        <input type="text" name="name" placeholder="Name" required>
+        <button type="submit">Add</button>
+    </form>
+
+    <h2>Current Participants</h2>
+    <ul class="participant-list">
+        {% for participant in participants %}
+        <li>
+            {{ participant.name }}
+            {% if participant.access_code %}
+            <span class="code">Code: {{ participant.access_code }}</span>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+
+<section class="exclusions">
+    <h2>Manage Exclusions</h2>
+    <form method="POST" action="{{ url_for('add_exclusion') }}">
+        <select name="person1_id" required>
+            {% for p in participants %}
+            <option value="{{ p.id }}">{{ p.name }}</option>
+            {% endfor %}
+        </select>
+        <span>cannot be matched with</span>
+        <select name="person2_id" required>
+            {% for p in participants %}
+            <option value="{{ p.id }}">{{ p.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Add Exclusion</button>
+    </form>
+
+    <h3>Current Exclusions</h3>
+    <ul class="exclusion-list">
+        {% for p in participants %}
+        {% for excluded in p.excluded_pairs %}
+        <li>{{ p.name }} ↔ {{ excluded.name }}</li>
+        {% endfor %}
+        {% endfor %}
+    </ul>
+</section>
+
+<section class="matching">
+    <h2>Generate Matches</h2>
+    <form method="POST" action="{{ url_for('generate_matches_route') }}">
+        <button type="submit" {% if participants|length < 2 %}disabled{% endif %}>
+            Generate New Matches
+        </button>
+    </form>
+
+    {% if current_session %}
+    <h3>Current Matches</h3>
+    <ul class="match-list">
+        {% for p in participants %}
+        {% if p.assigned_to_id %}
+        <li>
+            {{ p.name }} →
+            {{ participants|selectattr('id', 'eq', p.assigned_to_id)|first|attr('name') }}
+            (Code: {{ p.access_code }})
+        </li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+    {% endif %}
+</section>
+{% endblock %}
