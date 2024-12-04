@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from database import Base, init_db, Participant, MatchingSession
+from database import db, Participant, MatchingSession
 from matching import generate_matches
 import random
 import string
@@ -10,19 +10,16 @@ app = Flask(__name__, instance_relative_config=True)
 app.config.from_pyfile("config.py")
 
 # Initialize database
-db = init_db(app)
-
-
-@app.teardown_appcontext
-def shutdown_session(exception=None):
-    db.remove()
+db.init_app(app)
+with app.app_context():
+    db.create_all()
 
 
 def generate_access_code():
     while True:
         code = "".join(random.choices(string.digits, k=4))
         # Check if code already exists
-        exists = db.query(Participant).filter_by(access_code=code).first()
+        exists = db.session.query(Participant).filter_by(access_code=code).first()
         if not exists:
             return code
 
@@ -46,13 +43,13 @@ def home():
 @app.route("/view_match", methods=["POST"])
 def view_match():
     code = request.form.get("access_code")
-    participant = db.query(Participant).filter_by(access_code=code).first()
+    participant = db.session.query(Participant).filter_by(access_code=code).first()
 
     if not participant:
         flash("Invalid access code")
         return redirect(url_for("home"))
 
-    assigned_to = db.query(Participant).get(participant.assigned_to_id)
+    assigned_to = db.session.query(Participant).get(participant.assigned_to_id)
     return render_template(
         "participant_result.html", participant=participant, assigned_to=assigned_to
     )
@@ -61,9 +58,11 @@ def view_match():
 @app.route("/admin")
 @admin_required
 def admin():
-    participants = db.query(Participant).all()
+    participants = db.session.query(Participant).all()
     current_session = (
-        db.query(MatchingSession).order_by(MatchingSession.created_at.desc()).first()
+        db.session.query(MatchingSession)
+        .order_by(MatchingSession.created_at.desc())
+        .first()
     )
     return render_template(
         "admin.html", participants=participants, current_session=current_session
@@ -76,8 +75,8 @@ def add_participant():
     name = request.form.get("name")
 
     participant = Participant(name=name)
-    db.add(participant)
-    db.commit()
+    db.session.add(participant)
+    db.session.commit()
 
     flash(f"Added participant: {name}")
     return redirect(url_for("admin"))
@@ -88,10 +87,10 @@ def add_participant():
 def generate_matches_route():
     # Create new matching session
     session = MatchingSession()
-    db.add(session)
-    db.commit()
+    db.session.add(session)
+    db.session.commit()
 
-    participants = db.query(Participant).all()
+    participants = db.session.query(Participant).all()
     participant_ids = [p.id for p in participants]
 
     # Get exclusion pairs
@@ -105,16 +104,16 @@ def generate_matches_route():
 
         # Assign matches and generate codes
         for giver_id, receiver_id in matches.items():
-            participant = db.query(Participant).get(giver_id)
+            participant = db.session.query(Participant).get(giver_id)
             participant.assigned_to_id = receiver_id
             participant.matching_session_id = session.id
             participant.access_code = generate_access_code()
 
-        db.commit()
+        db.session.commit()
         flash("Successfully generated new matches!")
 
     except ValueError as e:
-        db.rollback()
+        db.session.rollback()
         flash(
             "Failed to generate matches. Please check exclusions and try again.",
             "error",
@@ -129,12 +128,12 @@ def add_exclusion():
     person1_id = request.form.get("person1_id")
     person2_id = request.form.get("person2_id")
 
-    person1 = db.query(Participant).get(person1_id)
-    person2 = db.query(Participant).get(person2_id)
+    person1 = db.session.query(Participant).get(person1_id)
+    person2 = db.session.query(Participant).get(person2_id)
 
     if person1 and person2:
         person1.excluded_pairs.append(person2)
-        db.commit()
+        db.session.commit()
         flash(f"Added exclusion: {person1.name} ↔ {person2.name}")
 
     return redirect(url_for("admin"))
