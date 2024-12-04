@@ -89,6 +89,9 @@ li {
 .code-entry-box,
 .result-box {
     background: white;
+    background-color: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
@@ -137,7 +140,7 @@ li {
 
 .greeting {
     font-size: 1.4em;
-    color: #555555;
+    color: #333333;
 }
 
 .match-reveal {
@@ -223,7 +226,7 @@ button,
 }
 
 h1.animated {
-    font-family: 'Arial', sans-serif;
+    font-family: 'Georgia', sans-serif;
     margin: 0;
     padding: 0;
     padding-bottom: 20px;
